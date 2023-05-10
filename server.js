@@ -6,6 +6,7 @@ const bcrypt = require ('bcrypt')
 const jwt = require('jsonwebtoken')
 
 const User = require('./schemas/user.js')
+const SetList = require('./schemas/setList.js')
 const PORT = 8080
 
 app.use(cors())
@@ -63,7 +64,7 @@ app.post('/api/login', async (req,res) => {
             }
 
             const token = jwt.sign({ username }, 'THISISMYSECRETKEY')
-            res.json({ success:true, token })
+            res.json({ success: true, token, user: user._id })
             //If the password matches then it will generate a JSON web token for the user 
             //the jwt.sign method is what's doing this
             console.log('login successful!')
@@ -78,6 +79,28 @@ app.post('/api/login', async (req,res) => {
     .catch(err => {
         return res.status(500).json({ success: false, message: 'Internal server error' })
     })
+})
+
+app.post('/api/setList/:userId', async (req,res) => {
+
+    const user = await User.findById(req.params.userId)
+
+    const name = req.body.name
+    const set_img_url = req.body.set_img_url
+    const num_parts = req.body.num_parts
+    const year = req.body.year
+
+    const sets = new SetList ({
+        name: name,
+        set_img_url: set_img_url,
+        num_parts: num_parts,
+        year: year
+    })
+    await sets.save()
+    user.listOfSets.push(sets)
+    // line 99 & 100 is saving sets as a normal schema and then it's going to push that information in that schema into the listOfSets array that's inside of the User schema
+    await user.save()
+    res.status(201).json(sets)
 })
 
 app.listen(PORT, () => {
