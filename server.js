@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken')
 
 const User = require('./schemas/user.js')
 const SetList = require('./schemas/setList.js')
+const minifigList = require('./schemas/minifigs.js')
 const PORT = 8080
 
 app.use(cors())
@@ -31,12 +32,16 @@ app.post('/api/register', async (req,res) => {
         username: username,
         password: password
     })
+    
+    const salt = await bcrypt.genSalt(10)
+    const passwordHash = await bcrypt.hash(password, salt)
+    user.password = passwordHash
+    
 
     if(user) {
         await user.save()
-
-        const token = jwt.sign((username), 'THISMYSECRETKEY')
-        res.json({token: token, success: true, message: `${username} is a registered user now!`})
+        const token = jwt.sign({username}, 'THISMYSECRETKEY')
+        res.json({token: token, success: true, userId: user._id, message: `${username} is a registered user now!`})
     } else {
         res.json({success: false, message: "User already exists"})
     }
@@ -46,7 +51,7 @@ app.post('/api/login', async (req,res) => {
     const username = req.body.username
     const password = req.body.password
     //extracting the username and password from the request body and putting them into a variable
-
+    console.log(username, password)
     User.findOne({ username })
     //The findOne method is finding the variable passed to (in this case it's username) in the database
     .then(user => {
@@ -64,10 +69,9 @@ app.post('/api/login', async (req,res) => {
             }
 
             const token = jwt.sign({ username }, 'THISISMYSECRETKEY')
-            res.json({ success: true, token, user: user._id })
+            res.json({ success: true, token, userId: user._id })
             //If the password matches then it will generate a JSON web token for the user 
             //the jwt.sign method is what's doing this
-            console.log('login successful!')
         })
 
         .catch(err => {
@@ -96,11 +100,29 @@ app.post('/api/setList/:userId', async (req,res) => {
         num_parts: num_parts,
         year: year
     })
-    await sets.save()
     user.listOfSets.push(sets)
-    // line 99 & 100 is saving sets as a normal schema and then it's going to push that information in that schema into the listOfSets array that's inside of the User schema
+    // saving sets as a normal schema and then it's going to push that information in that schema into the listOfSets array that's inside of the User schema
     await user.save()
+    await sets.save()
     res.status(201).json(sets)
+})
+
+app.post('/api/minifigList/:userId', async (req,res) => {
+
+    const user = await User.findById(req.params.userId)
+
+    const name = req.body.name
+    const set_img_url = req.body.set_img_url
+
+    const newFig = new minifigList ({
+        name: name,
+        set_img_url: set_img_url
+    })
+    user.listOfMinifigs.push(newFig)
+
+    await user.save()
+    await newFig.save()
+    res.status(201).json(newFig)
 })
 
 app.listen(PORT, () => {
