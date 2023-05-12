@@ -5,15 +5,22 @@ const mongoose = require('mongoose')
 const bcrypt = require ('bcrypt')
 const jwt = require('jsonwebtoken')
 
+require('dotenv').config()
+const dbConfig = {
+    port: process.env.DB_PORT,
+    key: process.env.DB_SECRET_KEY,
+    dbConnect: process.env.DB_CONNECT
+}
+
 const User = require('./schemas/user.js')
 const SetList = require('./schemas/setList.js')
 const minifigList = require('./schemas/minifigs.js')
-const PORT = 8080
+const PORT = dbConfig.port
 
 app.use(cors())
 app.use(express.json())
 
-mongoose.connect('mongodb+srv://headbaash:fe4fOUNSZ62LNiM0@legogroups.qb2a94g.mongodb.net/?retryWrites=true&w=majority')
+mongoose.connect(dbConfig.dbConnect)
 .then(() => {
     console.log('connection successful')
 }).catch((error) => {
@@ -40,7 +47,7 @@ app.post('/api/register', async (req,res) => {
 
     if(user) {
         await user.save()
-        const token = jwt.sign({username}, 'THISMYSECRETKEY')
+        const token = jwt.sign({username}, dbConfig.key)
         res.json({token: token, success: true, userId: user._id, message: `${username} is a registered user now!`})
     } else {
         res.json({success: false, message: "User already exists"})
@@ -68,7 +75,7 @@ app.post('/api/login', async (req,res) => {
                 //this error message given if a password doesn't match any user
             }
 
-            const token = jwt.sign({ username }, 'THISISMYSECRETKEY')
+            const token = jwt.sign({ username }, dbConfig.key)
             res.json({ success: true, token, userId: user._id })
             //If the password matches then it will generate a JSON web token for the user 
             //the jwt.sign method is what's doing this
