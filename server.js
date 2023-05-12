@@ -90,12 +90,14 @@ app.post('/api/setList/:userId', async (req,res) => {
     const user = await User.findById(req.params.userId)
 
     const name = req.body.name
+    const set_num = req.body.set_num
     const set_img_url = req.body.set_img_url
     const num_parts = req.body.num_parts
     const year = req.body.year
 
     const sets = new SetList ({
         name: name,
+        set_num: set_num,
         set_img_url: set_img_url,
         num_parts: num_parts,
         year: year
@@ -105,6 +107,19 @@ app.post('/api/setList/:userId', async (req,res) => {
     await user.save()
     await sets.save()
     res.status(201).json(sets)
+})
+
+app.get('/api/setList/:userId', async (req,res) => {
+    try {
+        const userId = req.params.userId
+        const user = await User.findById(userId)
+
+        const setLists = user.listOfSets
+        res.json(setLists)
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({message: "Error finding list of sets"})
+    }
 })
 
 app.post('/api/minifigList/:userId', async (req,res) => {
@@ -123,6 +138,19 @@ app.post('/api/minifigList/:userId', async (req,res) => {
     await user.save()
     await newFig.save()
     res.status(201).json(newFig)
+})
+
+app.get('/api/minifigList/:userId', async (req,res) => {
+    try {
+        const userId = req.params.userId
+        const user = await User.findById(userId)
+
+        const minifigList = user.listOfMinifigs
+        res.json(minifigList)
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({message: "Error finding list of minifigs"})
+    }
 })
 
 app.listen(PORT, () => {
