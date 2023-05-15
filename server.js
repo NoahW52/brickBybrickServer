@@ -64,7 +64,7 @@ app.post('/api/login', async (req,res) => {
     .then(user => {
         if (!user) {
             return res.status(401).json({success: false, message: 'Invalid user'})
-            //This will trigger if a user is not found
+            //This will trigger if a user is not found ok
         }
 
         bcrypt.compare(password, user.password)
