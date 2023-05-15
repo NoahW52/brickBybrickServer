@@ -57,7 +57,7 @@ app.post('/api/register', async (req,res) => {
 app.post('/api/login', async (req,res) => {
     const username = req.body.username
     const password = req.body.password
-    //extracting the username and password from the request body and putting them into a variable
+    //extracting the username & password from the request body and putting them into a variable
     console.log(username, password)
     User.findOne({ username })
     //The findOne method is finding the variable passed to (in this case it's username) in the database
