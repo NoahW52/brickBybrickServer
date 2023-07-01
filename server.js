@@ -129,19 +129,30 @@ app.get('/api/setList/:userId', async (req,res) => {
     }
 })
 
+app.delete('/api/setList/:userId/:setId', async (req,res) => {
+    const userId = req.params.userId
+    const setId = req.params.setId
+
+    const deleteSet = await User.updateOne(
+        {_id: userId},
+        {$pull: { listOfSets: {_id: setId } } }
+    )
+    res.json({deleteSet, message: 'Set deleted'})
+})
+
 app.post('/api/minifigList/:userId', async (req,res) => {
-
+    
     const user = await User.findById(req.params.userId)
-
+    
     const name = req.body.name
     const set_img_url = req.body.set_img_url
-
+    
     const newFig = new minifigList ({
         name: name,
         set_img_url: set_img_url
     })
     user.listOfMinifigs.push(newFig)
-
+    
     await user.save()
     await newFig.save()
     res.status(201).json(newFig)
@@ -151,13 +162,25 @@ app.get('/api/minifigList/:userId', async (req,res) => {
     try {
         const userId = req.params.userId
         const user = await User.findById(userId)
-
+        
         const minifigList = user.listOfMinifigs
         res.json(minifigList)
     } catch (err) {
         console.error(err)
         res.status(500).json({message: "Error finding list of minifigs"})
     }
+})
+
+app.delete('/api/minifigList/:userId/:figId', async (req, res) => {
+
+    const userId = req.params.userId
+    const figId = req.params.figId
+
+    const deleteFig = await User.updateOne( 
+        {_id: userId},
+        {$pull: { listOfMinifigs: {_id: figId } } }
+    )
+    res.json({deleteFig, message: "figure deleted"})
 })
 
 app.listen(PORT, () => {
